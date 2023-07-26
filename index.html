@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title> ඉරි වලින් චිත්‍ර අදිමු</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+        }
+        canvas {
+            display: block;
+            border: 1px solid black;
+        }
+        .controls {
+            position: absolute;
+            margin-top: 100px;
+            left: 10px;
+        }
+        img{
+            position: absolute;
+            margin-top: 50px;
+            margin-left: 20px;
+        }
+    </style>
+</head>
+<body>
+    
+    <img src="images/dr.png">
+    <div class="controls">
+        <label for="line-color">Select Line Color:</label>
+        <input type="color" id="line-color" value="#0000ff">
+        <br>
+        <label for="line-size">Select Line Size:</label>
+        <input type="range" id="line-size" min="1" max="10" value="2">
+    </div>
+    <canvas id="canvas"></canvas>
+
+    <script>
+        // Get the canvas and its 2D context
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+
+        // Set the canvas size to cover the entire window
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        // Variables to store the start and end points of the line
+        let startPoint = { x: 0, y: 0 };
+        let endPoint = { x: 0, y: 0 };
+
+        // Array to store the drawn lines
+        let drawnLines = [];
+
+        // Variable to keep track of whether the first point has been clicked
+        let firstPointClicked = false;
+
+        // Get the line color and size elements
+        const lineColorInput = document.getElementById('line-color');
+        const lineSizeInput = document.getElementById('line-size');
+
+        // Event listener to update the mouse position on click and move
+        canvas.addEventListener('mousedown', function(event) {
+            if (!firstPointClicked) {
+                // Set the start point on the first click
+                startPoint.x = event.clientX;
+                startPoint.y = event.clientY;
+                firstPointClicked = true;
+            } else {
+                // Set the end point on the second click
+                endPoint.x = event.clientX;
+                endPoint.y = event.clientY;
+                // Save the line in the drawnLines array
+                drawnLines.push({ start: { ...startPoint }, end: { ...endPoint }, color: lineColorInput.value, size: lineSizeInput.value });
+                // Redraw all the lines
+                redrawLines();
+                // Reset the points and firstPointClicked flag for the next line
+                startPoint = { x: 0, y: 0 };
+                endPoint = { x: 0, y: 0 };
+                firstPointClicked = false;
+            }
+        });
+
+        canvas.addEventListener('mousemove', function(event) {
+            if (firstPointClicked) {
+                // Update the end point while the user moves the mouse
+                endPoint.x = event.clientX;
+                endPoint.y = event.clientY;
+                // Redraw all the lines, including the temporary line being drawn
+                redrawLines();
+            }
+        });
+
+        // Function to draw a line from (x1, y1) to (x2, y2)
+        function drawLine(x1, y1, x2, y2, color, size) {
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.strokeStyle = color;
+            ctx.lineWidth = size;
+            ctx.stroke();
+        }
+
+        // Function to redraw all the lines from the drawnLines array
+        function redrawLines() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (const line of drawnLines) {
+                drawLine(line.start.x, line.start.y, line.end.x, line.end.y, line.color, line.size);
+            }
+            // Draw the temporary line from startPoint to endPoint
+            if (firstPointClicked) {
+                drawLine(startPoint.x, startPoint.y, endPoint.x, endPoint.y, lineColorInput.value, lineSizeInput.value);
+            }
+        }
+    </script>
+</body>
+</html>

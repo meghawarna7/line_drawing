@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-4bw+/aepP/YC94hEpVNVgiZdgIC5+VKNBQNGCHeKRQN+PtmoHDEXuppvnDJzQIu9" crossorigin="anonymous">
+    <title> ඉරි වලින් චිත්‍ර අදිමු</title>
+    <style>
+        body {
+            margin: 0px;
+            overflow: hidden;
+            
+        }
+        canvas {
+            display: block;
+            border: 1px solid black;
+        }
+        .controls {
+            position: absolute;
+            margin-top: 100px;
+            left: 30px;
+        }
+        label{
+            font-size: 30px;
+            font-weight: 700;
+        }
+        img{
+            box-shadow:0 0 30px rgb(31, 184, 235) ;
+            position: absolute;
+            margin-top: 250px;
+            margin-left: 20px;
+            width:220px;
+            left: 30px;
+        }
+        .buttons {
+           
+            position: absolute;
+           top:20px;
+            left: 30px;
+            padding-top: 10px;
+        }
+        .buttons button {
+            box-shadow:0 0 10px rgb(31, 184, 235) ;
+            background-color: transparent;
+            border: 2px solid #000;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 24px;
+            font-weight: 800;
+            cursor: pointer;
+            margin-right: 20px;
+            transition: color 0.2s, border-color 0.2s;
+        }
+
+        .buttons button:hover {
+            color: #0000ff;
+            border-color: #0000ff;
+        }
+        @media (max-width: 768px) {
+    /* Adjust the position and size of elements for mobile devices */
+    .controls {
+        top: 10px;
+        left: 50%;
+        transform: translateX(-50%);
+
+    }
+    h1{
+        position: absolute;
+        box-shadow:0 0 10px rgb(31, 184, 235) ;
+            left:100px;
+            font-size: 60px;
+            padding-top: 30px;
+            font-weight: 900;
+            width: max-content;
+}
+.l{
+         
+            transform: translateX(-50%);
+           
+            position: absolute;
+            top:380px;
+           
+            margin-right: 200px;
+        }
+}
+        /* Styling for the "Share" button */
+        #share {
+            background-color: #1877f2;
+            color: #fff;
+            border-color: #1877f2;
+        }
+
+        #share:hover {
+            background-color: #0d6aad;
+            border-color: #0d6aad;
+        }
+        h1{
+            position: absolute;
+            left:500px;
+            font-size: 60px;
+            padding-top: 20px;
+            font-weight: 900;
+            width: max-content;
+        }
+       
+        
+        .a,.b,.c{
+            border-radius: 10px;
+            height: 80px;
+            width:80px;
+            margin-left: 2px;
+            top:10px;
+            position:absolute;
+        }
+        .b{
+           margin-left:90px;
+          
+        }
+        .c{
+           margin-left:190px
+        }
+        .l{
+            position: absolute;
+            top:380px;
+            right: 400px;
+        }
+    </style>
+</head>
+<body>
+    
+    <img src="images/dr.png">
+    <div class="l">
+    <a href="/index.html"><img class="a" src="images/m.png"></a>
+    <a href="/index2.html"><img class="b"src="images/k.png"></a>
+    <a href="/index3.html"><img class="c"src="images/e.png"></a></div>
+    <div class="controls">
+        <label for="line-color">පාට තෝරන්න:</label>
+        <input type="color" id="line-color" value="#0000ff">
+        <br>
+        <label for="line-size"> ඉරි වල ප්‍රමාණය තෝරන්න:</label>
+        <input type="range" id="line-size" min="1" max="10" value="2">
+    </div>
+    <div class="buttons">
+        <button id="stop-drawing">නතර කරන්න</button>
+        <button id="restart">මුල ඉදන් අදින්න</button>
+        
+        <button id="continue-drawing">නතර කරපු තැන ඉදන් අදින්න</button>
+        <button id="download">Download කරන්න</button>
+        
+        <h1><b> ඉරි වලින් චිත්‍ර අදිමු ...</b></h1>
+    </div>
+    <canvas id="canvas"></canvas>
+
+    <script>
+        // Get the canvas and its 2D context
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+
+        // Set the canvas size to cover the entire window
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        // Variables to store the start and end points of the line
+        let startPoint = { x: 0, y: 0 };
+        let endPoint = { x: 0, y: 0 };
+
+        // Array to store the drawn lines
+        let drawnLines = [];
+
+        // Variable to keep track of whether the first point has been clicked
+        let firstPointClicked = false;
+
+        // Variable to keep track of whether the line is active
+        let lineActive = true; // Set to true initially to enable drawing
+
+        // Get the line color and size elements
+        const lineColorInput = document.getElementById('line-color');
+        const lineSizeInput = document.getElementById('line-size');
+
+        // Get the buttons
+        const stopDrawingButton = document.getElementById('stop-drawing');
+        const restartButton = document.getElementById('restart');
+        const removeLastLineButton = document.getElementById('remove-last-line');
+        const continueDrawingButton = document.getElementById('continue-drawing');
+        const downloadButton = document.getElementById('download');
+        const shareButton = document.getElementById('share');
+
+        // Event listener to update the mouse position on click and move
+        canvas.addEventListener('mousedown', function(event) {
+            if (lineActive && !firstPointClicked) {
+                // Set the start point on the first click
+                startPoint.x = event.clientX;
+                startPoint.y = event.clientY;
+                firstPointClicked = true;
+            } else if (lineActive) {
+                // Set the end point on subsequent clicks
+                endPoint.x = event.clientX;
+                endPoint.y = event.clientY;
+                // Save the line in the drawnLines array
+                drawnLines.push({ start: { ...startPoint }, end: { ...endPoint }, color: lineColorInput.value, size: lineSizeInput.value });
+                // Redraw all the lines
+                redrawLines();
+                // Update the start point for the next segment of the line
+                startPoint.x = endPoint.x;
+                startPoint.y = endPoint.y;
+            }
+        });
+
+        canvas.addEventListener('mousemove', function(event) {
+            if (lineActive && firstPointClicked) {
+                // Update the end point while the user moves the mouse
+                endPoint.x = event.clientX;
+                endPoint.y = event.clientY;
+                // Redraw all the lines, including the temporary line being drawn
+                redrawLines();
+            }
+        });
+
+        // Function to draw a line from (x1, y1) to (x2, y2)
+        function drawLine(x1, y1, x2, y2, color, size) {
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.strokeStyle = color;
+            ctx.lineWidth = size;
+            ctx.stroke();
+        }
+
+        // Function to redraw all the lines from the drawnLines array
+        function redrawLines() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (const line of drawnLines) {
+                drawLine(line.start.x, line.start.y, line.end.x, line.end.y, line.color, line.size);
+            }
+            // Draw the temporary line from startPoint to endPoint
+            if (lineActive && firstPointClicked) {
+                drawLine(startPoint.x, startPoint.y, endPoint.x, endPoint.y, lineColorInput.value, lineSizeInput.value);
+            }
+        }
+
+        // Event listener for the "Stop Drawing" button
+        stopDrawingButton.addEventListener('click', function() {
+            lineActive = false;
+            firstPointClicked = false;
+        });
+
+        // Event listener for the "Restart" button
+        restartButton.addEventListener('click', function() {
+            // Clear the canvas and reset the drawn lines
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawnLines = [];
+            lineActive = true;
+            firstPointClicked = false;
+        });
+
+        // Event listener for the "Remove Last Line" button
+     
+
+        // Event listener for the "Continue Drawing" button
+        continueDrawingButton.addEventListener('click', function() {
+            lineActive = true;
+        });
+
+        // Event listener for the "Download" button
+        downloadButton.addEventListener('click', function() {
+            // Create a temporary anchor element and set its href to the canvas image data
+            const downloadLink = document.createElement('a');
+            downloadLink.href = canvas.toDataURL();
+            downloadLink.download = 'canvas_drawing.png';
+            // Trigger a click event on the anchor element to initiate the download
+            downloadLink.click();
+        });
+
+      
+
+        // Event listener for the "dblclick" event to end drawing
+        canvas.addEventListener('dblclick', function() {
+            lineActive = false;
+            firstPointClicked = false;
+        });
+    </script>
+</body>
+</html>
